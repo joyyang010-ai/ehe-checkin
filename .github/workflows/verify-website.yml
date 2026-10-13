@@ -1,0 +1,57 @@
+name: Verify EHE website
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch exact public repository commit
+        env:
+          REPOSITORY: ${{ github.repository }}
+          REVISION: ${{ github.sha }}
+        run: |
+          git init .
+          git remote add origin "https://github.com/${REPOSITORY}.git"
+          git fetch --depth=1 origin "$REVISION"
+          git checkout --detach FETCH_HEAD
+      - name: Check JavaScript and linked assets
+        run: |
+          set -eu
+          find docs/assets -type f -name '*.js' -exec node --check {} \;
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          from urllib.parse import urlsplit
+          class Links(HTMLParser):
+              def handle_starttag(self, tag, attrs):
+                  values=dict(attrs)
+                  for key in ('src','href'):
+                      path=urlsplit(values.get(key,'')).path
+                      if path and not path.startswith(('http:', 'https:', '#', 'data:')):
+                          assert (Path('docs')/path).exists(), 'Missing asset: '+path
+          Links().feed(Path('docs/index.html').read_text())
+          print('PASS: JavaScript parses and all HTML assets exist.')
+          PY
+      - name: Verify read-only live API behavior
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const api='https://dcfyhkjecchogrdatgcg.supabase.co/functions/v1/ehe-api';
+          const key='sb_publishable_9GswqXbnlKKnKyo-2QGwbQ_LOnCHJR0';
+          const origin='https://joyyang010-ai.github.io';
+          const r=await fetch(api+'?route=catalog',{headers:{Origin:origin,apikey:key},signal:AbortSignal.timeout(30000)});
+          assert.equal(r.status,200,'Catalog HTTP status');
+          assert.equal(r.headers.get('access-control-allow-origin'),origin,'CORS origin');
+          const data=await r.json();
+          assert.ok(Array.isArray(data.events)&&Array.isArray(data.shifts),'Catalog schema');
+          assert.ok(!('people' in data)&&!('bookings' in data)&&!('service' in data),'No private lists');
+          const denied=await fetch(api+'?route=staff',{method:'POST',headers:{Origin:origin,apikey:key,'Content-Type':'application/json'},body:JSON.stringify({action:'snapshot'}),signal:AbortSignal.timeout(30000)});
+          assert.ok([401,403].includes(denied.status),'Unauthenticated staff access denied');
+          console.log('PASS: live catalog, CORS and unauthenticated staff access.');
+          console.log('Not tested: authenticated staff, writes, email delivery and two-device acceptance.');
+          JS
