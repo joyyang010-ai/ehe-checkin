@@ -4,5 +4,5 @@ window.EHE_CONFIG = Object.freeze({
  key:'sb_publishable_9GswqXbnlKKnKyo-2QGwbQ_LOnCHJR0',
  api:'https://dcfyhkjecchogrdatgcg.supabase.co/functions/v1/ehe-api',
  emailEnabled:false,
- version:'1.2.0'
+ version:'1.3.0'
 });
