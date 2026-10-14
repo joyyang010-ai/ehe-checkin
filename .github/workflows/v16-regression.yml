@@ -1,0 +1,39 @@
+name: V16 volunteer routing and archive regression
+on:
+  push:
+    branches: [main, fix-volunteer-entry-archive-v16]
+    paths: ['docs/**', 'tests/v16*', '.github/workflows/v16-regression.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch exact public source
+        run: |
+          curl -fsSL "https://api.github.com/repos/${GITHUB_REPOSITORY}/tarball/${GITHUB_SHA}" -o source.tgz
+          mkdir source
+          tar -xzf source.tgz --strip-components=1 -C source
+      - name: Install pinned browser tests
+        working-directory: source
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx --no-install playwright install --with-deps chromium webkit
+      - name: Syntax and isolated Chromium and WebKit tests
+        working-directory: source
+        run: |
+          for file in docs/assets/*.js; do node --check "$file"; done
+          node tests/v16-smoke.cjs
+      - name: Save synthetic evidence and exact public source
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ehe-v16-regression
+          path: |
+            source/ui-audit-v16/
+            source/docs/
+            source/tests/v16-smoke.cjs
+          retention-days: 7
+          if-no-files-found: error
