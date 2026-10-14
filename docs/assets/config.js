@@ -5,5 +5,5 @@ window.EHE_CONFIG = Object.freeze({
   api: 'https://dcfyhkjecchogrdatgcg.supabase.co/functions/v1/ehe-api',
   // Enable after SMTP and Auth redirect URLs have been configured and tested.
   emailEnabled: false,
-  version: '1.0.1'
+  version: '1.1.0'
 });
