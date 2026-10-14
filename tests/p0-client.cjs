@@ -1,0 +1,21 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const src=fs.readFileSync('docs/assets/participant-p0.js','utf8');
+const stats=src.slice(src.indexOf('function participantSessionStats()'),src.indexOf('function participantStatsHTML()'));
+const write=src.slice(src.indexOf('command=async function('),src.indexOf("document.addEventListener('input'"));
+assert(stats.startsWith('function '));assert(write.startsWith('command='));
+const results=[];
+const pass=name=>{results.push({test:name,passed:true});console.log('PASS '+name);};
+const ctx={S:{event:'e1',q:'irrelevant filter',data:{people:[{id:'EHE-0001',name:'QA participant'}],enrollments:[{id:'r1',person_id:'EHE-0001',event_id:'e1',entry_method:'preregistered'},{id:'r2',person_id:'EHE-0002',event_id:'e1',entry_method:'walk_in'},{id:'r3',person_id:'EHE-0003',event_id:'e1',entry_method:'new_on_site'},{id:'other',person_id:'EHE-0001',event_id:'e2',entry_method:'preregistered'}],attendance:[{enrollment_id:'r1',status:'checked_in',voided:false},{enrollment_id:'r1',status:'checked_in',voided:false},{enrollment_id:'r2',status:'checked_in',voided:true},{enrollment_id:'r3',status:'absent',voided:false},{enrollment_id:'other',status:'checked_in',voided:false}]}},pendingWrites:new Map(),crypto:{randomUUID:()=>require('node:crypto').randomUUID()},close:()=>{},t:(_z,e)=>e,$:()=>null,toast:()=>{},refresh:async()=>true,api:async()=>({ok:true})};ctx.person=id=>ctx.S.data.people.find(p=>p.id===id);vm.createContext(ctx);vm.runInContext(stats+write,ctx);
+(async()=>{
+ const got=JSON.parse(JSON.stringify(ctx.participantSessionStats()));assert.deepEqual(got,{registered:3,checked:1,remaining:2,walkins:2,rate:33});pass('Counts use only selected session and deduplicate active arrivals');
+ ctx.S.event='no-enrollments';assert.equal(ctx.participantSessionStats().rate,null);pass('Zero denominator displays no fabricated rate');ctx.S.event='e1';
+ const notes=[];let calls=[],closed=0;ctx.toast=x=>notes.push(x);ctx.close=()=>closed++;let resolve;
+ ctx.api=async(_r,p)=>{calls.push(p);return new Promise(r=>resolve=r);};
+ const pending=ctx.command('participant_checkin',{enrollment_id:'r1'});await Promise.resolve();assert.equal(notes.length,0);assert.equal(closed,0);pass('No success or dialog close before server acknowledgement');resolve({ok:true});await pending;assert(notes.at(-1).includes('Check-in saved'));assert.equal(ctx.pendingWrites.size,0);pass('Confirmed server write and refreshed arrival produce success');
+ notes.length=0;calls=[];ctx.api=async(_r,p)=>{calls.push(p);throw new Error('NETWORK_ERROR');};await assert.rejects(ctx.command('participant_checkin',{enrollment_id:'r1'}));assert.equal(notes.length,0);assert.equal(ctx.pendingWrites.size,1);const retryId=calls[0].data._request_id;pass('Failed network write produces no false success and retains retry ID');
+ ctx.api=async(_r,p)=>{calls.push(p);return {ok:true};};await ctx.command('participant_checkin',{enrollment_id:'r1'});assert.equal(calls.at(-1).data._request_id,retryId);assert.equal(ctx.pendingWrites.size,0);pass('Retry reuses request ID until acknowledged');
+ notes.length=0;ctx.refresh=async()=>false;await ctx.command('participant_checkin',{enrollment_id:'r1'});assert(notes[0].includes('refreshing the roster failed'));assert(!notes[0].includes('Check-in saved'));pass('Successful write followed by failed refresh is explicitly distinguished');
+ ctx.refresh=async()=>true;notes.length=0;await ctx.command('participant_checkin',{enrollment_id:'r3'});assert(notes[0].includes('check-in was not confirmed'));pass('Existing non-arrival status cannot produce a false arrival confirmation');
+ ctx.S.q='filter';ctx.S.category='incomplete';ctx.S.attendance='waiting';await ctx.command('new_participant',{event_id:'e1',name:'QA',checkin:false});assert.equal(ctx.S.q,'');assert.equal(ctx.S.category,'all');assert.equal(ctx.S.attendance,'all');pass('New registration clears stale list filters after acknowledged write');
+ fs.mkdirSync('p0-report',{recursive:true});fs.writeFileSync('p0-report/client-tests.json',JSON.stringify({scope:'Isolated client unit tests; not authenticated live acceptance',results},null,2));
+})().catch(e=>{console.error(e);process.exitCode=1;});
