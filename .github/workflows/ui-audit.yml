@@ -1,7 +1,7 @@
 name: EHE UI alignment and desk smoke tests
 on:
   push:
-    branches: [main]
+    branches: [main, p0-participant-checkin]
     paths: ['docs/**', 'tests/**', '.github/workflows/ui-audit.yml']
   workflow_dispatch:
 permissions:
@@ -24,7 +24,7 @@ jobs:
       - name: Test mocked UI without accessing real participant data
         working-directory: source
         run: |
-          node tests/ui-audit.cjs
+          node tests/p0-ui.cjs
           node tests/workflow-routes.cjs
       - name: Save synthetic-data screenshots and report
         if: always()

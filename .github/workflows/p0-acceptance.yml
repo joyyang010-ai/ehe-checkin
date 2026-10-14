@@ -1,7 +1,7 @@
 name: P0 participant check-in acceptance
 on:
   push:
-    branches: [main]
+    branches: [main, p0-participant-checkin]
     paths: ['docs/**', 'tests/p0*', '.github/workflows/p0-acceptance.yml']
   workflow_dispatch:
 permissions:
@@ -26,17 +26,16 @@ jobs:
       - name: Verify JavaScript syntax
         run: find docs/assets -name '*.js' -exec node --check {} \;
       - name: Install pinned browser testing tools
-        if: hashFiles('tests/p0-live.cjs') != ''
         run: |
-          npm install --no-save --package-lock=false playwright@1.56.1
-          npx playwright install --with-deps chromium
-      - name: Live deployed-site acceptance
-        if: hashFiles('tests/p0-live.cjs') != ''
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx --no-install playwright install --with-deps chromium
+      - name: Read-only live deployed-site acceptance
         run: node tests/p0-live.cjs
-      - name: Save synthetic-only acceptance report
-        if: always() && hashFiles('p0-report/**') != ''
+      - name: Save acceptance report without credentials
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: p0-acceptance-report
           path: p0-report/
           retention-days: 7
+          if-no-files-found: ignore
