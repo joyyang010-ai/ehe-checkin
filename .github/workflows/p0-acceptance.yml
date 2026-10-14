@@ -1,0 +1,42 @@
+name: P0 participant check-in acceptance
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'tests/p0*', '.github/workflows/p0-acceptance.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Fetch exact public source
+        run: |
+          curl -fLsS --retry 2 "https://api.github.com/repos/${GITHUB_REPOSITORY}/tarball/${GITHUB_SHA}" -o /tmp/source.tgz
+          tar -xzf /tmp/source.tgz --strip-components=1
+      - name: Archive public source for review
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: p0-public-source
+          path: |
+            docs/
+            tests/
+          retention-days: 2
+      - name: Verify JavaScript syntax
+        run: find docs/assets -name '*.js' -exec node --check {} \;
+      - name: Install pinned browser testing tools
+        if: hashFiles('tests/p0-live.cjs') != ''
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Live deployed-site acceptance
+        if: hashFiles('tests/p0-live.cjs') != ''
+        run: node tests/p0-live.cjs
+      - name: Save synthetic-only acceptance report
+        if: always() && hashFiles('p0-report/**') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: p0-acceptance-report
+          path: p0-report/
+          retention-days: 7
