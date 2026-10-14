@@ -1,7 +1,7 @@
 name: EHE UI alignment and desk smoke tests
 on:
   push:
-    branches: [main]
+    branches: [main, privacy-access-v14]
     paths: ['docs/**', 'tests/**', '.github/workflows/ui-audit.yml']
   workflow_dispatch:
 permissions:
@@ -21,11 +21,16 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
           npx --no-install playwright install --with-deps chromium
+      - name: Check JavaScript syntax
+        working-directory: source
+        run: |
+          for f in docs/assets/*.js tests/*.cjs; do node --check "$f"; done
       - name: Test mocked UI without accessing real participant data
         working-directory: source
         run: |
           node tests/ui-audit.cjs
           node tests/workflow-routes.cjs
+          node tests/privacy-access.cjs
       - name: Save synthetic-data screenshots and report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -34,5 +39,6 @@ jobs:
           path: |
             source/ui-audit/
             source/docs/
+            source/tests/
           retention-days: 7
           if-no-files-found: ignore
