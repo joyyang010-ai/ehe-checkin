@@ -1,5 +1,6 @@
 // Reuse the original synthetic-data regression fixtures; adapt the deliberately changed master-search flow.
 const fs=require('node:fs');
+require('node:child_process').execFileSync(process.execPath,['tests/p0-client.cjs'],{stdio:'inherit'});
 let test=fs.readFileSync('tests/ui-audit.cjs','utf8');
 test=test.replaceAll('#deskSearchForm','#p0MasterSearch').replaceAll('[data-desk-person="QA-P2"]','[data-p0-use="QA-P2"]');
 const before="await page.locator('#deskNewForm [name=\"name\"]').fill('QA New Learner');";
@@ -13,7 +14,7 @@ test=test.replace('async function audit(page,name){',`async function audit(page,
   for(const k of ['registered','checked','remaining','walkins'])assert.equal(await page.locator('[data-metric="'+k+'"]').innerText(),String(v[k]));
   assert.equal(v.remaining,Math.max(0,v.registered-v.checked));
   assert.equal(await page.locator('[data-metric="rate"]').innerText(),v.rate===null?'\u2014':v.rate+'%');
-  assert(!/learner/i.test(await page.locator('.pageTitle h1').innerText()));
+  assert(!/learner/i.test(await page.locator('.pageTitle').innerText()));
  }
 `);
 new Function('require',test)(require);
