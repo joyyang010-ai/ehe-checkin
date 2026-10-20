@@ -1,0 +1,44 @@
+name: Volunteer optional registration v17
+on:
+  push:
+    branches: [main, volunteer-walkin-v17]
+    paths: ['docs/**', 'tests/volunteer-v17*', '.github/workflows/volunteer-v17.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch exact public source
+        run: |
+          curl -fsSL "https://api.github.com/repos/${GITHUB_REPOSITORY}/tarball/${GITHUB_SHA}" -o source.tgz
+          mkdir source
+          tar -xzf source.tgz --strip-components=1 -C source
+      - name: Install pinned browsers for tests
+        working-directory: source
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx --no-install playwright install --with-deps chromium webkit
+      - name: Test optional volunteer form and staff views with synthetic fixtures
+        working-directory: source
+        run: |
+          node --check docs/assets/volunteer-visits.js
+          node tests/p0-client.cjs
+          node tests/volunteer-v17.cjs
+      - name: Test deployed volunteer writeback with isolated QA visits
+        if: github.ref == 'refs/heads/main'
+        working-directory: source
+        run: node tests/volunteer-v17-live.cjs
+      - name: Save test report and exact public source
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ehe-volunteer-v17
+          path: |
+            source/v17-audit/
+            source/v17-live/
+            source/docs/
+            source/tests/
+          retention-days: 7
