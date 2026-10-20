@@ -2,14 +2,14 @@ name: Volunteer optional registration v17
 on:
   push:
     branches: [main, volunteer-walkin-v17]
-    paths: ['docs/**', 'tests/volunteer-v17*', '.github/workflows/volunteer-v17.yml']
+    paths: ['docs/**', 'tests/**', '.github/workflows/volunteer-v17.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Fetch exact public source
         run: |
@@ -27,6 +27,12 @@ jobs:
           node --check docs/assets/volunteer-visits.js
           node tests/p0-client.cjs
           node tests/volunteer-v17.cjs
+      - name: Preserve participant and archive regressions
+        working-directory: source
+        run: |
+          node tests/p0-ui.cjs
+          node tests/workflow-routes.cjs
+          node tests/v16-smoke.cjs
       - name: Test deployed volunteer writeback with isolated QA visits
         if: github.ref == 'refs/heads/main'
         working-directory: source
@@ -39,6 +45,8 @@ jobs:
           path: |
             source/v17-audit/
             source/v17-live/
+            source/ui-audit/
+            source/ui-audit-v16/
             source/docs/
             source/tests/
           retention-days: 7
