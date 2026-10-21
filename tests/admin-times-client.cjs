@@ -1,0 +1,19 @@
+// Isolated client checks; no production records or browser credentials.
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const code=fs.readFileSync('docs/assets/admin-times.js','utf8'),timeCode=code.slice(code.indexOf('function adminLocalEpoch'),code.indexOf('function updateAdminTimePreview'));
+const ctx={Date,Intl,t:(_z,en)=>en,visitClock:()=>Date.parse('2026-10-20T22:00:00Z'),visitLocal(value){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value));const get=k=>parts.find(x=>x.type===k).value;return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`;}};vm.createContext(ctx);vm.runInContext(timeCode,ctx);
+assert.equal(ctx.adminLocalEpoch('2026-10-20T13:00'),Date.parse('2026-10-20T17:00Z'));
+assert.equal(ctx.adminLocalEpoch('2026-01-20T13:00'),Date.parse('2026-01-20T18:00Z'));
+assert(Number.isNaN(ctx.adminLocalEpoch('2026-03-08T02:30')));
+assert.equal(ctx.adminLocalEpoch('2026-11-01T01:30'),Date.parse('2026-11-01T06:30Z'));
+assert.equal(ctx.adminTimeValidation({in_local:'2026-10-20T13:00',out_local:'2026-10-20T15:00'}),'');
+assert.equal(ctx.adminTimeValidation({in_local:'2026-10-20T13:00',out_local:''}),'');
+assert(ctx.adminTimeValidation({in_local:'2026-10-20T13:00',out_local:'2026-10-20T12:00'}));
+assert(ctx.adminTimeValidation({in_local:'2026-10-21T13:00',out_local:''}));
+console.log('PASS New York summer/winter/DST conversion, open visits, reversed and future times');
+const matchCode=code.slice(code.indexOf('function bookingVisit'),code.indexOf('function adminTimeControls'));
+ctx.S={data:{bookings:[{id:'b',person_id:'p',shift_id:'s',status:'confirmed'}],service:[]}};ctx.person=()=>({name:'QA Volunteer',email:'qa@example.invalid'});ctx.shift=()=>({event_id:'e'});ctx.eventFor=()=>({event_date:'2026-10-20'});ctx.nyDate=()=> '2026-10-20';ctx.p0Normalize=v=>String(v||'').toLowerCase().trim();ctx.eventShiftIds=()=>new Set(['s']);vm.runInContext(matchCode,ctx);
+assert.equal(ctx.missingVolunteerBookings().length,1);ctx.S.data.service=[{id:'v',visit_email:'qa@example.invalid',visit_name:'QA Volunteer',checked_in_at:'2026-10-20T17:00Z'}];assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]).id,'v');assert.equal(ctx.missingVolunteerBookings().length,0);
+console.log('PASS Missing confirmed bookings appear; matching existing visits route to edit instead of duplicate creation');
+for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v=1.9.0'));
+console.log('PASS Both entry points load admin time controls');
