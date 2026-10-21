@@ -30,6 +30,7 @@ jobs:
         working-directory: source
         run: |
           node --check docs/assets/volunteer-visits.js
+          node tests/auto-checkin-edge.cjs
           node tests/admin-times-client.cjs
           node tests/portal-client.cjs
           node tests/p0-client.cjs
