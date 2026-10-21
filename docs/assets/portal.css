@@ -29,3 +29,4 @@ body[data-portal=onsite] #app{max-width:800px;margin:auto}.arrivalTabs{display:g
 .actions>a.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 
 .advanceBookings{margin-top:24px}.advanceBookings>summary{cursor:pointer;min-height:44px;font-weight:700;padding:8px 0}.advanceBookings>.actions{margin-top:20px}
+.toast.show:has([data-admin-undo]){pointer-events:auto;display:flex;align-items:center;gap:16px}.toast [data-admin-undo]{flex-shrink:0;min-height:44px}
