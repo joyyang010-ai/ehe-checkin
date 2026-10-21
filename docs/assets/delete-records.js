@@ -19,7 +19,7 @@ function openRecordRemoval(type,id,operation){
 }
 document.addEventListener('click',event=>{const b=event.target.closest('[data-record-operation]');if(!b)return;event.preventDefault();event.stopImmediatePropagation();if(!S.busy)openRecordRemoval(b.dataset.recordType,b.dataset.recordId,b.dataset.recordOperation);},true);
 document.addEventListener('submit',event=>{
- const form=event.target;if(form.id!=='recordRemovalForm')return;event.preventDefault();event.stopImmediatePropagation();if(S.busy||S.data?.role!=='admin'||!form.reportValidity())return;
+ const form=event.target;if(form.getAttribute?.('id')!=='recordRemovalForm')return;event.preventDefault();event.stopImmediatePropagation();if(S.busy||S.data?.role!=='admin'||!form.reportValidity())return;
  const data=Object.fromEntries(new FormData(form));data.reason=data.reason.trim();if(data.reason.length<2){$('#formError').textContent=t('請填寫原因。','Enter a reason.');return;}if(data.target_type==='service')data.version=Number(data.version);
  const request_id=visitIdFor(form,data);
  run(async()=>{const result=await visitRequest('correct',{data:{...data,request_id}},true);if(result.ok!==true)throw Object.assign(new Error('INVALID_RESPONSE'),{code:'INVALID_RESPONSE'});close();const updated=await refresh();toast(updated?t('已儲存。','Saved.'):t('已儲存，請重新整理名單。','Saved. Refresh the list.'));},form.querySelector('[type="submit"]'));
