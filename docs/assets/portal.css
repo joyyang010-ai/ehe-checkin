@@ -26,3 +26,4 @@ body[data-portal=onsite] #app{max-width:800px;margin:auto}.arrivalTabs{display:g
 @media(max-width:600px){.adminClockActions .btn{flex:1}.adminBookingActions{flex-direction:column;align-items:stretch}}
 
 .pageTitle:not(:has(.eventControl)){grid-template-columns:1fr}.autoCheckinNotice{display:inline-block;padding:7px 11px;background:#e6f2df;color:#285039;border:1px solid #cbdcbe;border-radius:8px;font-size:.875rem;font-weight:650;margin:0 0 14px}
+.actions>a.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
