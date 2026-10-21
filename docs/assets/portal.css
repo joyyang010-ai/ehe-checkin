@@ -27,3 +27,5 @@ body[data-portal=onsite] #app{max-width:800px;margin:auto}.arrivalTabs{display:g
 
 .pageTitle:not(:has(.eventControl)){grid-template-columns:1fr}.autoCheckinNotice{display:inline-block;padding:7px 11px;background:#e6f2df;color:#285039;border:1px solid #cbdcbe;border-radius:8px;font-size:.875rem;font-weight:650;margin:0 0 14px}
 .actions>a.btn{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+
+.advanceBookings{margin-top:24px}.advanceBookings>summary{cursor:pointer;min-height:44px;font-weight:700;padding:8px 0}.advanceBookings>.actions{margin-top:20px}

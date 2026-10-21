@@ -37,3 +37,6 @@ document.addEventListener('click',event=>{
  $('#attendanceFilter').value=S.attendance;learnerRows();const target=b.hasAttribute('data-clear-participant')?$('#learnerSearch'):$(`[data-attendance-filter="${S.attendance}"]`);target?.focus({preventScroll:true});
 });
 render();
+
+// Keep attendance current without interrupting an open editor or search.
+setInterval(()=>{if(S.page==='staff'&&S.data&&!isCheckinDesk()&&['bookings','service'].includes(S.tab)&&!S.busy&&!$('#modal').open&&document.visibilityState==='visible'&&!document.activeElement?.matches('input,select,textarea'))refresh();},20000);

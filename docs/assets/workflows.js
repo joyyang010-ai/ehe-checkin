@@ -15,7 +15,7 @@ summary=function(s){const tpl=document.createElement('template');tpl.innerHTML=p
 const workflowChrome=chrome;
 chrome=function(){workflowChrome();if(S.page!=='staff'||!S.data)return;const brand=$('#topbar .volBrand small');if(brand)brand.textContent=isCheckinDesk()?'CHECK-IN DESK':'STAFF WORKSPACE';if(isCheckinDesk())return;
  const major=[['learners','學員簽到','Learner check-in'],['service','志工／工作人員出席與時數','Volunteer / Staff attendance & hours']];
- const other=[['overview','總覽','Overview'],['directory','學員總名單','All learners'],['events','活動','Events'],['shifts','志工班次','Volunteer shifts'],['bookings','志工報名','Volunteer bookings'],['profiles','志工資料','Volunteer profiles'],['reviews','報名資料問題','Booking issues']];
+ const other=[['overview','總覽','Overview'],['directory','學員總名單','All learners'],['events','活動','Events'],['shifts','志工班次','Volunteer shifts'],['bookings','出席與報名','Attendance & bookings'],['profiles','志工資料','Volunteer profiles']];
  const buttons=arr=>arr.map(([k,z,en])=>`<button type="button" data-tab="${k}" class="${S.tab===k?'active':''}">${t(z,en)}</button>`).join('');
  $('#sectionNav').innerHTML=`<div class="workflowNav"><div class="staffNav primaryWorkflowNav" aria-label="${t('出席管理','Attendance workflows')}">${buttons(major)}</div><div class="staffNav secondaryWorkflowNav" aria-label="${t('資料與活動管理','Records and event management')}">${buttons(other)}</div></div>`;
 };
