@@ -16,7 +16,12 @@ ctx.S={data:{bookings:[{id:'b',person_id:'p',shift_id:'s',status:'confirmed'}],s
 assert.equal(ctx.missingVolunteerBookings().length,1);ctx.S.data.service=[{id:'v',visit_email:'qa@example.invalid',visit_name:'QA Volunteer',checked_in_at:'2026-10-20T17:00Z'}];assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]).id,'v');assert.equal(ctx.missingVolunteerBookings().length,0);
 ctx.S.data.service[0].visit_event_id='other-event';assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]),null);
 console.log('PASS Missing confirmed bookings appear; matching existing visits route to edit instead of duplicate creation');
-for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v=1.12.3'));
+for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v=1.12.4'));
 console.log('PASS Both entry points load admin time controls');
 const staff=fs.readFileSync('docs/assets/staff.js','utf8');const queueCode=staff.slice(staff.indexOf('function reviewsPage()'),staff.indexOf('function staffPage()'));
 ctx.S.data.reviews=[{kind:'in',payload:{name:'QA arrival'},created_at:'2026-10-20'},{kind:'out',payload:{name:'QA departure'},created_at:'2026-10-20'},{kind:'signup',payload:{name:'QA booking'},created_at:'2026-10-20'}];Object.assign(ctx,{esc:v=>String(v||''),stamp:()=>'',pill:()=>'',btn:()=>'<button>Review</button>',table:(_h,rows)=>rows.join('')});vm.runInContext(queueCode,ctx);const queue=ctx.reviewsPage();assert(!queue.includes('QA arrival'));assert(!queue.includes('QA departure'));assert(queue.includes('QA booking'));console.log('PASS Check-in and checkout have no approval actions; booking issues remain available');
+const visitSource=fs.readFileSync('docs/assets/volunteer-visits.js','utf8'),normalizer=visitSource.slice(visitSource.indexOf('function normalizedVisitRows()'),visitSource.indexOf('function scopedVisits()'));
+ctx.S.data={bookings:[],shifts:[],service:[{id:'senior',visit_name:'Senior QA',visit_email:'',visit_person_id:'p',checked_in_at:'2026-10-20T17:00Z'}]};ctx.person=()=>({name:'Profile QA',email:'profile@example.invalid'});vm.runInContext(normalizer,ctx);assert.equal(ctx.normalizedVisitRows()[0].email,'');
+assert(code.includes("'email',false,254"));
+ctx.S.data.service=[{id:'blank',visit_email:'',visit_name:'Same Name',checked_in_at:'2026-10-20T17:00Z'}];ctx.person=()=>({name:'Same Name',email:''});assert.equal(ctx.bookingVisit({id:'b',person_id:'p',shift_id:'s'}),null);
+console.log('PASS Admin email is optional, intentional blank email stays blank, and blank identities do not auto-match bookings');
