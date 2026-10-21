@@ -3,7 +3,7 @@
 function bookingVisit(b){
  const attached=S.data.service.find(l=>l.booking_id===b.id);if(attached)return attached;
  const p=person(b.person_id),e=eventFor(shift(b.shift_id));
- const matches=S.data.service.filter(l=>!l.booking_id&&l.visit_email===p?.email?.trim().toLowerCase()&&p0Normalize(l.visit_name)===p0Normalize(p?.name)&&nyDate(l.checked_in_at)===e?.event_date);
+ const matches=S.data.service.filter(l=>!l.booking_id&&l.visit_email===p?.email?.trim().toLowerCase()&&p0Normalize(l.visit_name)===p0Normalize(p?.name)&&nyDate(l.checked_in_at)===e?.event_date&&(!l.visit_event_id||l.visit_event_id===e?.id)&&(!l.visit_shift_id||l.visit_shift_id===b.shift_id));
  return matches.length===1?matches[0]:null;
 }
 function missingVolunteerBookings(){const ids=eventShiftIds();return S.data.bookings.filter(b=>ids.has(b.shift_id)&&b.status==='confirmed'&&!bookingVisit(b));}

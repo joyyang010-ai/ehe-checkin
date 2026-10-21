@@ -14,6 +14,7 @@ console.log('PASS New York summer/winter/DST conversion, open visits, reversed a
 const matchCode=code.slice(code.indexOf('function bookingVisit'),code.indexOf('function adminTimeControls'));
 ctx.S={data:{bookings:[{id:'b',person_id:'p',shift_id:'s',status:'confirmed'}],service:[]}};ctx.person=()=>({name:'QA Volunteer',email:'qa@example.invalid'});ctx.shift=()=>({event_id:'e'});ctx.eventFor=()=>({event_date:'2026-10-20'});ctx.nyDate=()=> '2026-10-20';ctx.p0Normalize=v=>String(v||'').toLowerCase().trim();ctx.eventShiftIds=()=>new Set(['s']);vm.runInContext(matchCode,ctx);
 assert.equal(ctx.missingVolunteerBookings().length,1);ctx.S.data.service=[{id:'v',visit_email:'qa@example.invalid',visit_name:'QA Volunteer',checked_in_at:'2026-10-20T17:00Z'}];assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]).id,'v');assert.equal(ctx.missingVolunteerBookings().length,0);
+ctx.S.data.service[0].visit_event_id='other-event';assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]),null);
 console.log('PASS Missing confirmed bookings appear; matching existing visits route to edit instead of duplicate creation');
 for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v=1.9.0'));
 console.log('PASS Both entry points load admin time controls');
