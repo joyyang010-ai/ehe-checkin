@@ -1,7 +1,7 @@
 // Isolated presentation regressions. No network and no real attendance writes.
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const staff=fs.readFileSync('docs/assets/staff.js','utf8');
-const overview=staff.slice(staff.indexOf('function staffOverview()'),staff.indexOf('function arrivalButton'));
+const staff=fs.readFileSync('docs/assets/portal.js','utf8');
+const overview=staff.slice(staff.indexOf('staffOverview=function()'),staff.indexOf('// Presentation helpers'));
 const context={S:{event:'event-a',lang:'en'},participantSessionStats:()=>({registered:2,checked:1,remaining:1}),normalizedVisitRows:()=>[{event_id:'event-a',state:'active'},{event_id:'event-a',state:'completed'},{event_id:null,state:'active'},{event_id:'event-b',state:'active'}],selectedEvent:()=>({event_date:'2026-10-20',name_en:'QA <event>',location:'QA room'}),p0Today:()=>'2026-10-20',t:(zh,en)=>en,name:e=>e.name_en,esc:s=>String(s).replaceAll('<','&lt;'),stat:(label,value)=>`[${label}:${value}]`};vm.createContext(context);vm.runInContext(overview,context);
 const html=context.staffOverview();assert(html.includes('[Volunteers on site:1]'));assert(html.includes('[Completed volunteer visits:1]'));assert(html.includes('QA &lt;event>'));assert(html.includes('data-tab="learners"'));assert(html.includes('data-tab="service"'));
 console.log('PASS Overview scopes actual visits to selected event, escapes event names and links to both workflows');
