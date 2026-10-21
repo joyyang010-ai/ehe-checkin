@@ -4,6 +4,11 @@ on:
     branches: [main, volunteer-walkin-v17]
     paths: ['docs/**', 'tests/**', '.github/workflows/volunteer-v17.yml']
   workflow_dispatch:
+    inputs:
+      run_live_writeback:
+        description: "Run synthetic writes against production (creates QA visits requiring cleanup)"
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -25,6 +30,7 @@ jobs:
         working-directory: source
         run: |
           node --check docs/assets/volunteer-visits.js
+          node tests/portal-client.cjs
           node tests/p0-client.cjs
           node tests/volunteer-v17.cjs
       - name: Preserve participant and archive regressions
@@ -34,7 +40,7 @@ jobs:
           node tests/workflow-routes.cjs
           node tests/v16-smoke.cjs
       - name: Test deployed volunteer writeback with isolated QA visits
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.run_live_writeback == true
         working-directory: source
         run: node tests/volunteer-v17-live.cjs
       - name: Save test report and exact public source
