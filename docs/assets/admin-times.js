@@ -6,7 +6,7 @@ function bookingVisit(b){
  const matches=S.data.service.filter(l=>!l.booking_id&&l.visit_email===p?.email?.trim().toLowerCase()&&p0Normalize(l.visit_name)===p0Normalize(p?.name)&&nyDate(l.checked_in_at)===e?.event_date&&(!l.visit_event_id||l.visit_event_id===e?.id)&&(!l.visit_shift_id||l.visit_shift_id===b.shift_id));
  return matches.length===1?matches[0]:null;
 }
-function missingVolunteerBookings(){const ids=eventShiftIds();return S.data.bookings.filter(b=>ids.has(b.shift_id)&&b.status==='confirmed'&&!bookingVisit(b));}
+function missingVolunteerBookings(){const ids=eventShiftIds();return S.data.bookings.filter(b=>ids.has(b.shift_id)&&!shift(b.shift_id)?.deleted_at&&b.status==='confirmed'&&!bookingVisit(b));}
 function adminTimeControls(){return `<div class="adminClockActions"><button type="button" class="btn soft" data-clock-now="in_local">${t('現在簽到','Clock in now')}</button><button type="button" class="btn soft" data-clock-now="out_local">${t('現在簽退','Clock out now')}</button></div><p class="helpText">${t('按鈕只填入目前時間；確認實際時間並儲存後才會記錄。漏簽請輸入實際到場／離開時間。','These buttons fill the current time. Review and save to record it. For a missed entry, enter the actual arrival or departure time.')}</p>`;}
 function adminLocalEpoch(value){
  if(!value)return NaN;const normalized=value.length===16?value+':00':value,nominal=Date.parse(normalized+'Z');if(!Number.isFinite(nominal))return NaN;
