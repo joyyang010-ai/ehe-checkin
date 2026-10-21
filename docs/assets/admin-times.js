@@ -35,6 +35,7 @@ submitVisitCorrection=async function(form){
  const selectedDate=S.data.events.find(e=>e.id===(form.dataset.event||f.event_id))?.event_date;if(selectedDate&&f.in_local.slice(0,10)!==selectedDate){$('#formError').textContent=t('簽到日期必須與活動日期相同。','The check-in date must match the event date.');return;}
  const data={...f,event_id:f.event_id||'',role:f.role||'',version:Number(f.version||0),edit_details:true,needs_support:fd.has('needs_support'),duties:fd.getAll('duties'),observations:fd.getAll('observations')};
  if(f.manual_new)data.manual_new=true;if(f.manual_booking)data.manual_booking=true;
+ if(form.dataset.confirmPending)return;form.dataset.confirmPending='true';let confirmed;try{confirmed=await confirmAdminChange(f.name+'\n'+f.in_local.replace('T',' ')+' → '+(f.out_local?f.out_local.replace('T',' '):t('尚未簽退','No checkout')));}finally{delete form.dataset.confirmPending;}if(!confirmed||!form.isConnected)return;
  const previous=f.service_id?adminUndoData(S.data.service.find(r=>r.id===f.service_id)):null;
  const request_id=visitIdFor(form,data);
  await run(async()=>{

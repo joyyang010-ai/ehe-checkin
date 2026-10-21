@@ -27,6 +27,14 @@ if(S.page==='staff')render();
 
 // Undo uses the version returned by the acknowledged write, never a newer editor's data.
 let adminUndoAction=null;
+function confirmAdminChange(message){
+ return new Promise(resolve=>{
+  const d=document.createElement('dialog');d.id='adminConfirmDialog';d.setAttribute('aria-labelledby','adminConfirmTitle');
+  d.innerHTML=`<div class="modalHead"><h2 id="adminConfirmTitle">${t('確認儲存變更','Confirm changes')}</h2></div><div class="modalBody"><p class="detailReflection">${esc(message)}</p><p>${t('儲存後可按「撤銷」還原。','You can use Undo after saving.')}</p></div><div class="modalFooter"><button type="button" class="btn soft" data-confirm-choice="no">${t('返回編輯','Back to editing')}</button><button type="button" class="btn primary" data-confirm-choice="yes">${t('確認儲存','Confirm save')}</button></div>`;
+  let finished=false;const finish=value=>{if(finished)return;finished=true;d.close();d.remove();resolve(value);};
+  d.addEventListener('cancel',event=>{event.preventDefault();finish(false);});d.addEventListener('click',event=>{const b=event.target.closest('[data-confirm-choice]');if(b)finish(b.dataset.confirmChoice==='yes');});document.body.append(d);d.showModal();
+ });
+}
 function adminUndoData(record){
  if(!record)return null;const row=normalizedVisitRows().find(r=>r.record.id===record.id);if(!row)return null;
  return {service_id:record.id,version:record.version,edit_details:true,name:row.name,email:row.email,event_id:row.event_id||'',role:record.visit_role||row.shift?.duty||'',in_local:visitLocal(record.checked_in_at),out_local:visitLocal(record.checked_out_at),needs_support:!!record.needs_support,support_details:record.support_details||'',duties:record.duties||[],observations:record.observations||[],duty_other:record.duty_other||'',observation_other:record.observation_other||'',specific_observations:record.specific_observations||'',went_well:record.went_well||'',improvements:record.improvements||''};

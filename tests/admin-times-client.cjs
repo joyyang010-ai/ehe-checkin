@@ -16,7 +16,7 @@ ctx.S={data:{bookings:[{id:'b',person_id:'p',shift_id:'s',status:'confirmed'}],s
 assert.equal(ctx.missingVolunteerBookings().length,1);ctx.S.data.service=[{id:'v',visit_email:'qa@example.invalid',visit_name:'QA Volunteer',checked_in_at:'2026-10-20T17:00Z'}];assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]).id,'v');assert.equal(ctx.missingVolunteerBookings().length,0);
 ctx.S.data.service[0].visit_event_id='other-event';assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]),null);
 console.log('PASS Missing confirmed bookings appear; matching existing visits route to edit instead of duplicate creation');
-for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v=1.12.2'));
+for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v=1.12.3'));
 console.log('PASS Both entry points load admin time controls');
 const staff=fs.readFileSync('docs/assets/staff.js','utf8');const queueCode=staff.slice(staff.indexOf('function reviewsPage()'),staff.indexOf('function staffPage()'));
 ctx.S.data.reviews=[{kind:'in',payload:{name:'QA arrival'},created_at:'2026-10-20'},{kind:'out',payload:{name:'QA departure'},created_at:'2026-10-20'},{kind:'signup',payload:{name:'QA booking'},created_at:'2026-10-20'}];Object.assign(ctx,{esc:v=>String(v||''),stamp:()=>'',pill:()=>'',btn:()=>'<button>Review</button>',table:(_h,rows)=>rows.join('')});vm.runInContext(queueCode,ctx);const queue=ctx.reviewsPage();assert(!queue.includes('QA arrival'));assert(!queue.includes('QA departure'));assert(queue.includes('QA booking'));console.log('PASS Check-in and checkout have no approval actions; booking issues remain available');
