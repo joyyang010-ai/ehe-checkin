@@ -8,7 +8,7 @@ assert(ctx.staffShifts().includes('Deleted shifts (1)'));
 assert(ctx.recordDeleteButton('service','id').includes('data-record-operation="delete"'));
 assert(ctx.recordDeleteButton('service','id',true).includes('data-record-operation="restore"'));
 ctx.S.data.role='staff';assert.equal(ctx.staffService(),'<active>');assert.equal(ctx.staffShifts(),'<shifts>');
-for(const f of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(f,'utf8').includes('assets/delete-records.js?v=1.13.3'));
+for(const f of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(f,'utf8').includes('assets/delete-records.js?v=1.14.1'));
 assert(fs.readFileSync('docs/assets/core.js','utf8').includes("['staff','工作人員','Staff']"));
 console.log('PASS Admin delete/restore controls, escaped deleted history, restricted staff access and Staff role');
 

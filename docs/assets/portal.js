@@ -21,6 +21,7 @@ function enhancePortal(){
  for(const b of $$('[data-action="kind-in"],[data-action="kind-out"]'))b.setAttribute('aria-pressed',String(b.dataset.action==='kind-'+S.kind));
  const form=$('#quickVisitForm');
  if(form){
+  form.querySelector('[name="event_id"]').required=S.kind==='in';
   const title=document.createElement('div');title.className='visitFormTitle';title.innerHTML=`<span class="visitModeIcon" aria-hidden="true">${S.kind==='out'?'↗':'↘'}</span><div><h2>${S.kind==='out'?t('謝謝今天的付出','Thank you for your time'):t('歡迎，準備開始吧','Welcome. Let’s get started.')}</h2><p>${S.kind==='out'?t('離開前，記錄你的簽退時間。','Record your checkout before you leave.'):t('到場後，記錄你的簽到時間。','Record your check-in when you arrive.')}</p></div>`;form.prepend(title);
   form.querySelector('[name="email"]').inputMode='email';
  }
