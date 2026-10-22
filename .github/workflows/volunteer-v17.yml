@@ -32,6 +32,7 @@ jobs:
           node --check docs/assets/volunteer-visits.js
           node tests/auto-checkin-edge.cjs
           node tests/all-attendance-client.cjs
+          node tests/attendance-workspace-client.cjs
           node tests/delete-records-client.cjs
           node tests/admin-times-client.cjs
           node tests/portal-client.cjs
