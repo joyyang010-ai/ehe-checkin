@@ -9,3 +9,6 @@ vm.createContext(ctx);vm.runInContext(code,ctx);ctx.switchVisitKind('out');asser
 console.log('PASS Check-in mode switches preserve identity/context without storage and respect busy state');
 
 assert(fs.readFileSync('docs/assets/navigation.js','utf8').includes("if($('#quickVisitForm')){switchVisitKind"));
+
+const agreementCode=source.slice(source.indexOf('function volunteerAgreementsHTML'),source.indexOf('onsitePage=function'));
+const agreementCtx={t:(_z,en)=>en};vm.createContext(agreementCtx);vm.runInContext(agreementCode,agreementCtx);const html=agreementCtx.volunteerAgreementsHTML();assert(html.includes('1VskOlHdWUG67q6I1qiIJhr3H-gByO1N6'));assert(html.includes('1fnUEuDomAYbq9_GF-5T2Ju6AwWGc9cDJZ0X8Sy8kNvc'));assert.equal((html.match(/target="_blank" rel="noopener noreferrer"/g)||[]).length,2);assert(html.includes('does not sign it'));assert(!html.includes('<input'));assert(source.includes('${visitOptionalQuestions()}${volunteerAgreementsHTML()}'));assert(fs.readFileSync('docs/assets/attendance-workspace.js','utf8').includes('${volunteerAgreementsHTML()}'));console.log('PASS Approved document links are shared by public and staff views without claiming consent or signature');
