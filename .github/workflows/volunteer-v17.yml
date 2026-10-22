@@ -35,6 +35,7 @@ jobs:
           node tests/attendance-workspace-client.cjs
           node tests/checkin-mode-client.cjs
           node tests/bulk-attendance-client.cjs
+          node tests/program-dashboard-client.cjs
           node tests/delete-records-client.cjs
           node tests/admin-times-client.cjs
           node tests/portal-client.cjs
