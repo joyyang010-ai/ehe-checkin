@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const context={S:{lang:'en',page:'shifts'},session:null,document:{addEventListener(){}},setInterval(){},staffPage(){},chrome(){},updatePortalAddress(){},entryQuery:new URLSearchParams(),render(){}};
+vm.createContext(context);vm.runInContext(fs.readFileSync('docs/assets/session-attendance.js','utf8'),context);
+const data={people:[{id:'QA1',kind:'participant',name:'Test One'},{id:'QA2',kind:'participant',name:'Test Two'},{id:'QA3',kind:'participant',name:'Test Two'},{id:'QA4',kind:'participant',name:'Test Four',archived_at:'2026-10-22'},{id:'QA5',kind:'participant',name:'Test Five'},{id:'QA6',kind:'participant',name:'Test Six'}],enrollments:[],attendance:[]};
+for(const [pid,ev,eid] of [['QA1','A','1'],['QA1','B','2'],['QA2','A','3'],['QA3','B','4'],['QA4','A','5'],['QA4','B','6'],['QA5','A','7'],['QA5','B','8'],['QA6','B','9'],['QA1','C','10']])data.enrollments.push({person_id:pid,event_id:ev,id:eid});
+for(const eid of ['1','2','3','4','5','6','10'])data.attendance.push({enrollment_id:eid,status:'checked_in',checked_in_at:'2026-10-14T18:00:00Z',voided:false});
+data.attendance.push({enrollment_id:'7',status:'checked_in',voided:true},{enrollment_id:'8',status:'absent',voided:false},{enrollment_id:'9',status:'no_show',voided:false},{enrollment_id:'1',status:'checked_in',voided:false});
+const before=JSON.stringify(data),m=context.sessionAttendanceModel(data,'A','B');
+assert.equal(m.rows.length,6);assert.equal(m.first,3);assert.equal(m.second,3);assert.equal(m.both,2);assert.equal(m.either,4);
+assert.equal(m.possible.length,1);assert.equal(m.possible[0].length,2);assert.equal(m.rows.find(r=>r.person.id==='QA2').total,1);assert.equal(m.rows.find(r=>r.person.id==='QA3').total,1);
+assert.equal(m.rows.find(r=>r.person.id==='QA4').total,2);assert.equal(m.rows.find(r=>r.person.id==='QA5').a.status,'unrecorded');assert.equal(m.rows.find(r=>r.person.id==='QA5').b.status,'absent');assert.equal(m.rows.find(r=>r.person.id==='QA6').b.status,'no_show');
+assert.equal(JSON.stringify(data),before);assert.equal(context.sessionAttendanceModel({people:[],enrollments:[],attendance:[]},'A','B').both,0);
+console.log('PASS: ID-based counts; duplicate attendance safe; voided excluded; archived history; names not merged; missing not absent; input unmodified; empty state.');
