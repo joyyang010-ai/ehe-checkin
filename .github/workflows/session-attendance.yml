@@ -29,6 +29,10 @@ jobs:
       - name: Synthetic browser tests; no production sign-in or writes
         working-directory: source
         run: node tests/session-attendance-ui.cjs
+      - name: Verify actual published site without credentials or writes
+        if: github.ref == 'refs/heads/main'
+        working-directory: source
+        run: node tests/session-attendance-live.cjs
       - name: Save evidence and public source
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
