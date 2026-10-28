@@ -9,3 +9,10 @@ if(S.page==='staff'&&S.tab==='reviews')S.tab='bookings';
 S.kind=entryQuery.get('action')==='out'?'out':'in';S.shift=entryQuery.get('shift')||'';S.name='';S.email='';S.catalogLoaded=false;S.catalogError='';S.serverOffset=0;
 const entryApi=api;
 api=async function(route,body,secure=false){try{const result=await entryApi(route,body,secure);if(route==='catalog'){S.catalogLoaded=true;S.catalogError='';const clock=Date.parse(result.server_time);if(Number.isFinite(clock))S.serverOffset=clock-Date.now();}if(route==='submit'){S.name='';S.email='';}return result;}catch(e){if(route==='catalog')S.catalogError=errorText(e);throw e;}};
+
+// Route context is read before the first staff snapshot, never used for authorization.
+S.event=entryQuery.get("event")||"";
+S.visitScope=["event","all","unassigned"].includes(entryQuery.get("scope"))?entryQuery.get("scope"):"event";
+S.visitStatus=["all","attention","active","completed","missing_checkout","walkin"].includes(entryQuery.get("status"))?entryQuery.get("status"):"all";
+S.category=["all","new","walkin","incomplete","archived"].includes(entryQuery.get("category"))?entryQuery.get("category"):"all";
+S.attendance=["all","waiting","checked"].includes(entryQuery.get("attendance"))?entryQuery.get("attendance"):"all";

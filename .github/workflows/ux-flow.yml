@@ -1,0 +1,44 @@
+name: UX flow and duplicate protection
+on:
+  push:
+    branches: [main, ux-simplify-v118]
+    paths: ['docs/**', 'tests/ux-flow.py', '.github/workflows/ux-flow.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ux-flow-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - name: Fetch exact source without credentials
+        run: |
+          curl --fail --silent --show-error --location "https://codeload.github.com/$GITHUB_REPOSITORY/tar.gz/$GITHUB_SHA" -o source.tar.gz
+          tar -xzf source.tar.gz --strip-components=1
+      - name: JavaScript syntax
+        run: |
+          for f in docs/assets/*.js; do node --check "$f"; done
+      - name: Install pinned browser test tools
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps ${{ matrix.engine }}
+      - name: Synthetic UX tests - no production writes or email
+        env:
+          EHE_ENGINE: ${{ matrix.engine }}
+        run: python tests/ux-flow.py
+      - name: Evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ux-flow-${{ matrix.engine }}
+          retention-days: 7
+          path: |
+            ux-report/
+            docs/
