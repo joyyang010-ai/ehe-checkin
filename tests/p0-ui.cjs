@@ -1,8 +1,11 @@
-// Reuse the original synthetic-data regression fixtures; adapt the deliberately changed master-search flow.
+// Reuse synthetic fixtures, preserving attendance, diary and duplicate-safety assertions.
 const fs=require('node:fs');
 require('node:child_process').execFileSync(process.execPath,['tests/p0-client.cjs'],{stdio:'inherit'});
 let test=fs.readFileSync('tests/ui-audit.cjs','utf8');
 test=test.replaceAll('#deskSearchForm','#p0MasterSearch').replaceAll('[data-desk-person="QA-P2"]','[data-p0-use="QA-P2"]');
+// v1.18 consolidates Walk-in and Add Participant under Find / add participant.
+if(!test.includes('[data-action="walkin"]'))throw new Error('Review changed walk-in fixture.');
+test=test.replaceAll('[data-action="walkin"]','[data-action="new-person"]');
 const before="await page.locator('#deskNewForm [name=\"name\"]').fill('QA New Learner');";
 const after="await page.locator('#p0MasterSearch [name=\"query\"]').fill('QA New Participant');await page.locator('#p0MasterSearch button').click();await page.locator('[data-p0-new]').click();await page.locator('#p0NewParticipant [name=\"name\"]').fill('QA New Participant');";
 if(!test.includes(before))throw new Error('Legacy test changed: review P0 adaptation');
