@@ -10,6 +10,8 @@ await go(p,'/?portal=staff');await p.locator(width===390?'#mobileNav [data-nav=o
 `;
 source=source.slice(0,start)+publicChecks+source.slice(finish);
 function adapt(before,after){if(!source.includes(before))throw new Error('Review changed archive fixture: '+before);source=source.replace(before,after);}
+// Wait for the app's actual ready state, not an obsolete load event after SPA address normalization.
+adapt("await p.goto(base+url);await p.waitForFunction(()=>S.catalogLoaded||S.data);","await p.goto(base+url,{waitUntil:'domcontentloaded'});await p.waitForFunction(()=>typeof S!=='undefined'&&(S.catalogLoaded||S.data));");
 adapt("await p.locator('[data-archive-mode=request]').click();","await p.locator('.uxRowMore > summary').first().click();await p.locator('[data-archive-mode=request]').click();");
 adapt("await a.locator('[data-archive-tab=archive]').click();","await a.locator('.uxNavigationMore > summary').click();await a.locator('[data-archive-tab=archive]').click();");
 adapt("await p.locator('#categoryFilter').selectOption('archived');","await p.locator('.uxParticipantFilters > summary').click();await p.locator('#categoryFilter').selectOption('archived');");
