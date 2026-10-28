@@ -1,0 +1,38 @@
+name: UX accounts and published release
+on:
+  push:
+    branches: [main, ux-simplify-v118]
+    paths: ['docs/**', 'tests/account-flows.py', 'tests/ux-live.py', '.github/workflows/ux-final.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ux-final-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  accounts_and_live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Fetch exact public source
+        run: |
+          curl --fail --silent --show-error --location "https://codeload.github.com/$GITHUB_REPOSITORY/tar.gz/$GITHUB_SHA" -o source.tar.gz
+          tar -xzf source.tar.gz --strip-components=1
+      - name: Install pinned browser tools
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Account regression - synthetic only
+        run: python tests/account-flows.py
+      - name: Verify published site - no credentials or writes
+        if: github.ref == 'refs/heads/main'
+        run: python tests/ux-live.py
+      - name: Verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ux-final-verification
+          retention-days: 7
+          path: |
+            account-report/
+            ux-live-report/

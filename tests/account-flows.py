@@ -18,6 +18,7 @@ def fixture():
 
 def suite(browser, engine, width):
     context=browser.new_context(viewport={'width':width,'height':950});page=context.new_page();page.set_default_timeout(10000)
+    page.clock.install()
     calls=[];errors=[];state={'recover_error':False,'invalid_link':False,'api_fail':False,'can_manage':True,'apply_fail':False}
     page.on('pageerror',lambda e:errors.append(str(e)))
     def route(r):
@@ -52,7 +53,11 @@ def suite(browser, engine, width):
     context.route(API+'/**',route)
     def mark(name): results.append({'engine':engine,'width':width,'test':name,'passed':True})
     def no_overflow(): assert page.evaluate('() => document.documentElement.scrollWidth <= innerWidth + 2')
-    def submit(): page.locator('#accountForm [type=submit]').click()
+    def submit():
+        button=page.locator('#accountForm [type=submit]')
+        if button.is_disabled() and page.locator('[data-cooldown]').count():
+            page.clock.fast_forward(61000)
+        button.click()
     def has_status(text): expect(page.locator('#accountStatus')).to_contain_text(text)
     def has_error(text): expect(page.locator('#accountError')).to_contain_text(text)
     def fill_request():
@@ -60,11 +65,11 @@ def suite(browser, engine, width):
     def fill_passwords(second='LongSyntheticPassword123!'):
         page.locator('[name=password]').fill('LongSyntheticPassword123!');page.locator('[name=confirm]').fill(second)
     page.goto(BASE+'?portal=staff',wait_until='networkidle')
-    expect(page.locator('a[href="./account.html?mode=forgot"]')).to_have_count(1)
-    expect(page.locator('a[href="./account.html?mode=create"]')).to_have_count(1)
+    expect(page.locator('a[href$="/account.html?mode=forgot"]')).to_have_count(1)
+    expect(page.locator('a[href$="/account.html?mode=create"]')).to_have_count(1)
     expect(page.locator('[data-tab=access]')).to_have_count(0)
     mark('Logged-out portal exposes account help, not roster or owner review')
-    page.locator('a[href="./account.html?mode=forgot"]').click();page.wait_for_selector('#accountForm');no_overflow()
+    page.locator('a[href$="/account.html?mode=forgot"]').click();page.wait_for_selector('#accountForm');no_overflow()
     page.screenshot(path=str(OUT/f'{engine}-{width}-forgot.png'),full_page=True)
     page.locator('[name=email]').fill('QA@example.invalid');submit();has_status('Request accepted')
     req=[x for x in calls if '/recover?' in x['url']][-1];assert req['body']=={'email':'qa@example.invalid'};assert 'account.html' in req['url'];mark('Password reset sends normalized email and fixed same-origin callback')
