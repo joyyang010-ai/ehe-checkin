@@ -19,7 +19,7 @@ jobs:
       - name: Install pinned browser tests
         working-directory: source
         run: |
-          npm install --no-save --ignore-scripts playwright@1.56.1
+          npm install --no-save --ignore-scripts playwright@1.57.0
           npx --no-install playwright install --with-deps chromium webkit
       - name: Syntax and isolated Chromium and WebKit tests
         working-directory: source
