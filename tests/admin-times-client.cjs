@@ -1,4 +1,5 @@
 // Isolated client checks; no production records or browser credentials.
+const releaseVersion=require('node:fs').readFileSync('docs/assets/config.js','utf8').match(/version:'([^']+)'/)[1];
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const code=fs.readFileSync('docs/assets/admin-times.js','utf8'),timeCode=code.slice(code.indexOf('function adminLocalEpoch'),code.indexOf('function updateAdminTimePreview'));
 const ctx={Date,Intl,t:(_z,en)=>en,visitClock:()=>Date.parse('2026-10-20T22:00:00Z'),visitLocal(value){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(value));const get=k=>parts.find(x=>x.type===k).value;return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`;}};vm.createContext(ctx);vm.runInContext(timeCode,ctx);
@@ -16,7 +17,7 @@ ctx.S={data:{bookings:[{id:'b',person_id:'p',shift_id:'s',status:'confirmed'}],s
 assert.equal(ctx.missingVolunteerBookings().length,1);ctx.S.data.service=[{id:'v',visit_email:'qa@example.invalid',visit_name:'QA Volunteer',checked_in_at:'2026-10-20T17:00Z'}];assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]).id,'v');assert.equal(ctx.missingVolunteerBookings().length,0);
 ctx.S.data.service[0].visit_event_id='other-event';assert.equal(ctx.bookingVisit(ctx.S.data.bookings[0]),null);
 console.log('PASS Missing confirmed bookings appear; matching existing visits route to edit instead of duplicate creation');
-for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v=1.15.1'));
+for(const file of ['docs/index.html','docs/volunteer.html'])assert(fs.readFileSync(file,'utf8').includes('assets/admin-times.js?v='+releaseVersion));
 console.log('PASS Both entry points load admin time controls');
 const staff=fs.readFileSync('docs/assets/staff.js','utf8');const queueCode=staff.slice(staff.indexOf('function reviewsPage()'),staff.indexOf('function staffPage()'));
 ctx.S.data.reviews=[{kind:'in',payload:{name:'QA arrival'},created_at:'2026-10-20'},{kind:'out',payload:{name:'QA departure'},created_at:'2026-10-20'},{kind:'signup',payload:{name:'QA booking'},created_at:'2026-10-20'}];Object.assign(ctx,{esc:v=>String(v||''),stamp:()=>'',pill:()=>'',btn:()=>'<button>Review</button>',table:(_h,rows)=>rows.join('')});vm.runInContext(queueCode,ctx);const queue=ctx.reviewsPage();assert(!queue.includes('QA arrival'));assert(!queue.includes('QA departure'));assert(queue.includes('QA booking'));console.log('PASS Check-in and checkout have no approval actions; booking issues remain available');
